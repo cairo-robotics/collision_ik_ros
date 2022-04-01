@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>=
+    <node pkg="collision_ik" type="collision_ik_solver.py" name="collision_ik" output="screen"/>
+</launch>

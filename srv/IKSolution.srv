@@ -1,0 +1,7 @@
+collision_ik/EEPoseGoals ee_pose_goals
+collision_ik/JointAngles init
+float64 ee_pos_precision
+float64 ee_rot_precision
+---
+collision_ik/JointAngles joint_angles
+bool success

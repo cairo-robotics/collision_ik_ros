@@ -4,8 +4,6 @@ author: Danny Rakita, Haochen Shi
 email: rakita@cs.wisc.edu, hshi74@wisc.edu
 last update: 11/10/20
 
-PLEASE DO NOT CHANGE CODE IN THIS FILE.  IF TRYING TO SET UP RELAXEDIK, PLEASE REFER TO start_here.py INSTEAD
-AND FOLLOW THE STEP-BY-STEP INSTRUCTIONS THERE.  Thanks!
 '''
 
 import numpy
@@ -17,6 +15,7 @@ import utils
 import tf
 import transformations as T
 import yaml
+import pudb
 
 from std_msgs.msg import ColorRGBA, Float64
 from geometry_msgs.msg import Point, Pose
@@ -26,13 +25,15 @@ from sensor_msgs.msg import JointState, PointCloud2, PointField
 from timeit import default_timer as timer
 from visualization_msgs.msg import *
 
-from cairo_planning_core import CONFIG_PATH
+from cairo_planning_core import CONFIG_PATH, Agent
 
 path_to_src = rospkg.RosPack().get_path('collision_ik')
 animation_folder_path = path_to_src + '/animation_files/'
 geometry_folder_path = path_to_src + '/geometry_files/'
 env_settings_file_path = CONFIG_PATH + '/settings.yaml'
-
+# Rusty Robot Agent
+rusty_agent = Agent(env_settings_file_path, False, False)
+    
 ja_solution = ''
 def ja_solution_cb(data):
     global ja_solution
@@ -44,12 +45,12 @@ time_cur = 0.0
 def time_update_cb(msg):
     global time_cur
     time_cur = msg.data
-    print("The current time is {}".format(time_cur))
+    # print("The current time is {}".format(time_cur))
 
-# def marker_feedback_cb(msg, args):
-#     server = args
-#     server.setPose(msg.marker_name, msg.pose)    
-#     server.applyChanges()
+def marker_feedback_cb(msg, args):
+    server = args
+    server.setPose(msg.marker_name, msg.pose)    
+    server.applyChanges()
 
 def goal_marker_cb(msg, args):
     server = args[0]
@@ -298,7 +299,7 @@ def main():
         info_file_name = env_settings['loaded_robot']['name']
     else:
         raise NameError("Please defined the loaded robot!")
-        
+    pudb.set_trace()
     info_file_path = CONFIG_PATH + '/info_files/' + info_file_name
     info_file = open(info_file_path, 'r')
 
@@ -310,15 +311,15 @@ def main():
     joint_state_define_file_name = y['joint_state_define_func_file']
     joint_state_define_file = open(CONFIG_PATH + 'joint_state_define_functions/' + joint_state_define_file_name, 'r')
     joint_state_define = joint_state_define_file.read()
-    print(joint_state_define)
     exec(joint_state_define)
     urdf_file = open(CONFIG_PATH + 'urdfs/' + urdf_file_name, 'r')
     urdf_string = urdf_file.read()
-    rospy.set_param('robot_description', urdf_string)
+    rospy.set_param('/robot_description', urdf_string)
     js_pub = rospy.Publisher('joint_states',JointState,queue_size=5)
     rospy.Subscriber('/collsion_ik/joint_angle_solutions',JointAngles,ja_solution_cb)
     tf_pub = tf.TransformBroadcaster()
 
+    
     rospy.sleep(0.5)
 
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -329,13 +330,14 @@ def main():
     launch.start()
 
     server = InteractiveMarkerServer("simple_marker")
-    # rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb, server)
+    rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb, server)
 
-    init_pos, init_rot = utils.get_init_pose(info_file_path)
-    pose_goal_marker = make_marker('pose_goal', fixed_frame, 'widget', [0.1,0.1,0.1], init_pos, init_rot, False)
+    # init_pos, init_rot = utils.get_init_pose(info_file_path)
+    fk_result = rusty_agent.forward_kinematics(y['starting_config'])
+    pose_goal_marker = make_marker('pose_goal', fixed_frame, 'widget', [0.1,0.1,0.1], fk_result[0], fk_result[1], False)
     server.insert(pose_goal_marker)
 
-    rospy.Subscriber('/collision_ik/ee_pose_goals', EEPoseGoals, goal_marker_cb, (server, init_pos, init_rot))
+    rospy.Subscriber('/collision_ik/ee_pose_goals', EEPoseGoals, goal_marker_cb, (server, fk_result[0], fk_result[1]))
     rospy.Subscriber('/collision_ik/current_time', Float64, time_update_cb)
     
     dyn_obs_handles = []

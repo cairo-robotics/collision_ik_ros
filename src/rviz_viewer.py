@@ -32,10 +32,11 @@ animation_folder_path = path_to_src + '/animation_files/'
 geometry_folder_path = path_to_src + '/geometry_files/'
 env_settings_file_path = CONFIG_PATH + '/settings.yaml'
 # Rusty Robot Agent
-rusty_agent = Agent(env_settings_file_path, False, False)
+rusty_agent = Agent(env_settings_file_path, True, True)
     
 ja_solution = ''
 def ja_solution_cb(data):
+    print(data)
     global ja_solution
     ja_solution = []
     for a in data.angles.data:
@@ -299,7 +300,7 @@ def main():
         info_file_name = env_settings['loaded_robot']['name']
     else:
         raise NameError("Please defined the loaded robot!")
-    pudb.set_trace()
+    # pudb.set_trace()
     info_file_path = CONFIG_PATH + '/info_files/' + info_file_name
     info_file = open(info_file_path, 'r')
 
@@ -315,8 +316,8 @@ def main():
     urdf_file = open(CONFIG_PATH + 'urdfs/' + urdf_file_name, 'r')
     urdf_string = urdf_file.read()
     rospy.set_param('/robot_description', urdf_string)
-    js_pub = rospy.Publisher('joint_states',JointState,queue_size=5)
-    rospy.Subscriber('/collsion_ik/joint_angle_solutions',JointAngles,ja_solution_cb)
+    js_pub = rospy.Publisher('/joint_states',JointState,queue_size=5)
+    rospy.Subscriber('/collision_ik/joint_angle_solutions',JointAngles,ja_solution_cb)
     tf_pub = tf.TransformBroadcaster()
 
     
@@ -330,7 +331,7 @@ def main():
     launch.start()
 
     server = InteractiveMarkerServer("simple_marker")
-    rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb, server)
+    # rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb, server)
 
     # init_pos, init_rot = utils.get_init_pose(info_file_path)
     fk_result = rusty_agent.forward_kinematics(y['starting_config'])
@@ -389,6 +390,7 @@ def main():
             for x in xopt:
                 js.position.append(x)
         js.header.stamp = rospy.Time.now()
+        print(js)
         js_pub.publish(js)
 	
         rate.sleep()

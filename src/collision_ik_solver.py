@@ -78,7 +78,7 @@ def main(args=None):
     print("\CollisionIK initialized!\nRobot: {}\nObjective mode: {}\n".format(robot_name, objective_mode))
     
     # Rusty Robot Agent
-    rusty_agent = Agent(env_settings_file_path, False, False)
+    rusty_agent = Agent(env_settings_file_path, True, True)
     
     # Publishers
     angles_pub = rospy.Publisher('/collision_ik/joint_angle_solutions', JointAngles, queue_size=10)
@@ -145,7 +145,7 @@ def main(args=None):
             speed = 1.0 / (end - start)
             # print("Speed: {}".format(speed))
             speed_list.append(speed)
-
+            print(xopt.data)
             ja = JointAngles()
             ja.header = header
             ja_str = "["

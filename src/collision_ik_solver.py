@@ -13,10 +13,8 @@ import yaml
 from functools import partial
 
 from collision_ik.msg import EEPoseGoals, JointAngles
-from robot import Robot
 from std_msgs.msg import Float64
 from timeit import default_timer as timer
-from urdf_load import urdf_load
 from visualization_msgs.msg import InteractiveMarkerFeedback, InteractiveMarkerUpdate
 
 path_to_src = rospkg.RosPack().get_path('collision_ik')
@@ -115,7 +113,7 @@ def main(args=None):
         while eepg == None: continue
         print("The keyboard_ikgoal_driver is initialized!\n")
 
-        rate = rospy.Rate(3000)
+        rate = rospy.Rate(600)
         speed_list = []
         while not rospy.is_shutdown():
             cur_time_msg = Float64()
@@ -125,27 +123,32 @@ def main(args=None):
 
             pose_goals = eepg.ee_poses
             header = eepg.header
-            pos_arr = (ctypes.c_double * (3 * len(pose_goals)))()
-            quat_arr = (ctypes.c_double * (4 * len(pose_goals)))()
-
+            pos_arr = []
+            quat_arr = []
+            # pos_arr = (ctypes.c_double * (3 * len(pose_goals)))()
+            # quat_arr = (ctypes.c_double * (4 * len(pose_goals)))()
+            
             for i in range(len(pose_goals)):
                 p = pose_goals[i]
-                pos_arr[3*i] = p.position.x
-                pos_arr[3*i+1] = p.position.y
-                pos_arr[3*i+2] = p.position.z
+                pos_arr.append(p.position.x)
+                pos_arr.append(p.position.y)
+                pos_arr.append(p.position.z)
 
-                quat_arr[4*i] = p.orientation.x
-                quat_arr[4*i+1] = p.orientation.y
-                quat_arr[4*i+2] = p.orientation.z
-                quat_arr[4*i+3] = p.orientation.w
+                quat_arr.append(p.orientation.x)
+                quat_arr.append(p.orientation.y)
+                quat_arr.append(p.orientation.z)
+                quat_arr.append(p.orientation.w)
 
             start = timer()
-            xopt = rusty_agent.relaxed_inverse_kinematics(pos_arr, quat_arr)
+            xopt = rusty_agent.collision_ik(pos_arr, quat_arr)
             end = timer()
             speed = 1.0 / (end - start)
+            print(speed)
+            if speed < 3:
+                print("Slow collision_ik call.")
             # print("Speed: {}".format(speed))
             speed_list.append(speed)
-            print(xopt.data)
+
             ja = JointAngles()
             ja.header = header
             ja_str = "["
@@ -156,10 +159,8 @@ def main(args=None):
                     ja_str += "]"
                 else: 
                     ja_str += ", "
-
             angles_pub.publish(ja)
             # print(ja_str)
-
             rate.sleep()
 
         print("Average speed: {} HZ".format(numpy.mean(speed_list)))
@@ -182,7 +183,13 @@ def main(args=None):
         starting_fk_results = rusty_agent.forward_kinematics(starting_config)
         init_trans = starting_fk_results[0]
         init_rot = starting_fk_results[1]
-        # print(init_trans, init_rot)
+        # arms = []
+        # for i in range(num_chains):
+        #     urdf_robot, arm, arm_c, tree = urdf_load('', '', '', full_joint_lists[i], fixed_ee_joints[i])
+        #     arms.append(arm)
+        # robot = Robot(arms, full_joint_lists, joint_order)
+        # init_trans = robot.get_ee_positions(starting_config)[0]
+        # init_rot = robot.get_ee_rotations(starting_config)[0]
 
         # Read the cartesian path
         cartesian_path_file_name = robot_info['input_device']
@@ -201,7 +208,7 @@ def main(args=None):
         pos_goal_tolerance = 0.01
         quat_goal_tolerance = 0.01
         
-        rate = rospy.Rate(3000)
+        rate = rospy.Rate(600)
         while not rospy.is_shutdown():
             if cur_time >= max_time: break
             # Publish the current time

@@ -62,7 +62,7 @@ add_message_files(
 # )
 add_service_files(
    FILES
-   RelaxedIKSolution.srv
+   CollisionIKSolution.srv
    IKSolution.srv
    SelfCollisionQuery.srv
 )

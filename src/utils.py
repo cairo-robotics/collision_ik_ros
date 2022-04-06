@@ -8,8 +8,8 @@ import transformations as T
 import yaml
 
 from geometry_msgs.msg import Pose
-from robot import Robot
-from urdf_load import urdf_load
+# from robot import Robot
+# from urdf_load import urdf_load
 
 path_to_src = rospkg.RosPack().get_path('collision_ik')
 
@@ -127,22 +127,22 @@ def extract_joint_states(ja_stream_list, step):
     #     .format(len(ja_stream_list), len(new_ja_stream)))
     return new_ja_stream
 
-def get_init_pose(info_file_path):
-    info_file = open(info_file_path, 'r')
-    y = yaml.load(info_file, Loader=yaml.FullLoader)
-    starting_config = y['starting_config']
-    fixed_ee_joints = y['ee_fixed_joints']
-    full_joint_lists = y['joint_names']
-    num_chains = len(full_joint_lists)
-    joint_order = y['joint_ordering']
+# def get_init_pose(info_file_path):
+#     info_file = open(info_file_path, 'r')
+#     y = yaml.load(info_file, Loader=yaml.FullLoader)
+#     starting_config = y['starting_config']
+#     fixed_ee_joints = y['ee_fixed_joints']
+#     full_joint_lists = y['joint_names']
+#     num_chains = len(full_joint_lists)
+#     joint_order = y['joint_ordering']
 
-    # Set up Relaxed IK Python robot
-    arms = []
-    for i in range(num_chains):
-        urdf_robot, arm, arm_c, tree = urdf_load('', '', '', full_joint_lists[i], fixed_ee_joints[i])
-        arms.append(arm)
-    robot = Robot(arms, full_joint_lists, joint_order)
-    init_trans = robot.get_ee_positions(starting_config)[0]
-    init_rot = robot.get_ee_rotations(starting_config)[0]
+#     # Set up Relaxed IK Python robot
+#     arms = []
+#     for i in range(num_chains):
+#         urdf_robot, arm, arm_c, tree = urdf_load('', '', '', full_joint_lists[i], fixed_ee_joints[i])
+#         arms.append(arm)
+#     robot = Robot(arms, full_joint_lists, joint_order)
+#     init_trans = robot.get_ee_positions(starting_config)[0]
+#     init_rot = robot.get_ee_rotations(starting_config)[0]
 
-    return init_trans, init_rot
+#     return init_trans, init_rot

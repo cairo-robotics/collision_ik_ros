@@ -14,7 +14,7 @@ ik_goal_l_pub = rospy.Publisher('/ik_goal_l',PoseStamped,queue_size=5)
 goal_pos_pub = rospy.Publisher('vive_position', Vector3Stamped)
 goal_quat_pub = rospy.Publisher('vive_quaternion', QuaternionStamped)
 ee_pose_goals_pub = rospy.Publisher('/collision_ik/ee_pose_goals', EEPoseGoals, queue_size=5)
-quit_pub = rospy.Publisher('/relaxed_ik/quit',Bool,queue_size=5)
+quit_pub = rospy.Publisher('/collision_ik/quit',Bool,queue_size=5)
 
 pos_stride = 0.015
 rot_stride = 0.055
@@ -26,7 +26,7 @@ position_l = [0,0,0]
 rotation_l = [1,0,0,0]
 
 seq = 1
-rate = rospy.Rate(1000)
+rate = rospy.Rate(3000)
 while not rospy.is_shutdown():
     pose = PoseStamped()
     pose.pose.position.x = position_r[0]

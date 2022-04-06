@@ -17,11 +17,11 @@ import transformations as T
 import yaml
 import pudb
 
-from std_msgs.msg import ColorRGBA, Float64
+from std_msgs.msg import Float64
 from geometry_msgs.msg import Point, Pose
 from interactive_markers.interactive_marker_server import *
 from collision_ik.msg import EEPoseGoals, JointAngles
-from sensor_msgs.msg import JointState, PointCloud2, PointField
+from sensor_msgs.msg import JointState
 from timeit import default_timer as timer
 from visualization_msgs.msg import *
 
@@ -36,7 +36,6 @@ rusty_agent = Agent(env_settings_file_path, True, True)
     
 ja_solution = ''
 def ja_solution_cb(data):
-    print(data)
     global ja_solution
     ja_solution = []
     for a in data.angles.data:
@@ -316,12 +315,9 @@ def main():
     urdf_file = open(CONFIG_PATH + 'urdfs/' + urdf_file_name, 'r')
     urdf_string = urdf_file.read()
     rospy.set_param('/robot_description', urdf_string)
-    js_pub = rospy.Publisher('/joint_states',JointState,queue_size=5)
+    js_pub = rospy.Publisher('joint_states',JointState,queue_size=5)
     rospy.Subscriber('/collision_ik/joint_angle_solutions',JointAngles,ja_solution_cb)
     tf_pub = tf.TransformBroadcaster()
-
-    
-    rospy.sleep(0.5)
 
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
@@ -334,11 +330,13 @@ def main():
     # rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb, server)
 
     # init_pos, init_rot = utils.get_init_pose(info_file_path)
-    fk_result = rusty_agent.forward_kinematics(y['starting_config'])
-    pose_goal_marker = make_marker('pose_goal', fixed_frame, 'widget', [0.1,0.1,0.1], fk_result[0], fk_result[1], False)
+    starting_fk_results = rusty_agent.forward_kinematics(starting_config)
+    init_pos = starting_fk_results[0]
+    init_rot = starting_fk_results[1]
+    pose_goal_marker = make_marker('pose_goal', fixed_frame, 'widget', [0.1,0.1,0.1], init_pos, init_rot, False)
     server.insert(pose_goal_marker)
 
-    rospy.Subscriber('/collision_ik/ee_pose_goals', EEPoseGoals, goal_marker_cb, (server, fk_result[0], fk_result[1]))
+    rospy.Subscriber('/collision_ik/ee_pose_goals', EEPoseGoals, goal_marker_cb, (server, init_pos, init_rot))
     rospy.Subscriber('/collision_ik/current_time', Float64, time_update_cb)
     
     dyn_obs_handles = []
@@ -390,7 +388,6 @@ def main():
             for x in xopt:
                 js.position.append(x)
         js.header.stamp = rospy.Time.now()
-        print(js)
         js_pub.publish(js)
 	
         rate.sleep()

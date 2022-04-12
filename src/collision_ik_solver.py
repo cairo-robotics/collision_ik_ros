@@ -113,7 +113,7 @@ def main(args=None):
         while eepg == None: continue
         print("The keyboard_ikgoal_driver is initialized!\n")
 
-        rate = rospy.Rate(600)
+        rate = rospy.Rate(750)
         speed_list = []
         while not rospy.is_shutdown():
             cur_time_msg = Float64()
@@ -208,7 +208,7 @@ def main(args=None):
         pos_goal_tolerance = 0.01
         quat_goal_tolerance = 0.01
         
-        rate = rospy.Rate(600)
+        rate = rospy.Rate(750)
         while not rospy.is_shutdown():
             if cur_time >= max_time: break
             # Publish the current time

@@ -315,8 +315,8 @@ def main():
     urdf_file = open(CONFIG_PATH + 'urdfs/' + urdf_file_name, 'r')
     urdf_string = urdf_file.read()
     rospy.set_param('/robot_description', urdf_string)
-    js_pub = rospy.Publisher('joint_states',JointState,queue_size=5)
-    rospy.Subscriber('/collision_ik/joint_angle_solutions',JointAngles,ja_solution_cb)
+    js_pub = rospy.Publisher('joint_states', JointState,queue_size=5)
+    rospy.Subscriber('/collision_ik/joint_angle_solutions', JointAngles, ja_solution_cb)
     tf_pub = tf.TransformBroadcaster()
 
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)

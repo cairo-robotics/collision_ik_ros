@@ -13,6 +13,7 @@ import yaml
 from functools import partial
 
 from collision_ik.msg import EEPoseGoals, JointAngles
+from collision_ik.srv import CollisionIKSolution
 from std_msgs.msg import Float64
 from timeit import default_timer as timer
 from visualization_msgs.msg import InteractiveMarkerFeedback, InteractiveMarkerUpdate
@@ -61,11 +62,30 @@ def eePoseGoals_cb(msg):
     
 class CollisionIKService():
     
-    def __init__(self):
-        self.
+    def __init__(self, env_settings_file_path):
+         # Load the infomation
+        env_settings_file = open(env_settings_file_path, 'r')
+        env_settings = yaml.load(env_settings_file, Loader=yaml.FullLoader)
+
+        if 'loaded_robot' in env_settings:
+            robot_info = env_settings['loaded_robot']
+        else:
+            raise NameError('Please define the relevant information of the robot!')
+
+        info_file_name = robot_info['name']
+        robot_name = info_file_name.split('_')[0]
+        objective_mode = robot_info['objective_mode']
+        print("\CollisionIK initialized!\nRobot: {}\nObjective mode: {}\n".format(robot_name, objective_mode))
+        rospy.Service('add_two_ints', CollisionIKSolution, self._handle_ik_call)
+        # Rusty Robot Agent
+        self.rusty_agent = Agent(env_settings_file_path, True, True)
+    
+    def _handle_ik_call(self, req):
+        
 
 def main(args=None):
     rospy.init_node('collision_ik')
+    
 
     # Load the infomation
     env_settings_file = open(env_settings_file_path, 'r')

@@ -30,7 +30,9 @@ from cairo_planning_core import CONFIG_PATH, Agent
 path_to_src = rospkg.RosPack().get_path('collision_ik')
 animation_folder_path = path_to_src + '/animation_files/'
 geometry_folder_path = path_to_src + '/geometry_files/'
-env_settings_file_path = CONFIG_PATH + '/settings.yaml'
+# env_settings_file_path = CONFIG_PATH + '/settings.yaml'
+env_settings_file_path =  path_to_src + "/config/settings.yaml"
+
 # Rusty Robot Agent
 rusty_agent = Agent(env_settings_file_path, True, True)
     

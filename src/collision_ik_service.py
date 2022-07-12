@@ -64,19 +64,22 @@ class CollisionIKServiceHandler():
         robot_name = info_file_name.split('_')[0]
         objective_mode = robot_info['objective_mode']
         print("\CollisionIK initialized!\nRobot: {}\nObjective mode: {}\n".format(robot_name, objective_mode))
-        self.ik_service = rospy.Service('add_two_ints', CollisionIKSolution, self._handle_ik_call)
+        self.ik_service = rospy.Service('collision_ik/inverse_kinematics', CollisionIKSolution, self._handle_ik_call)
+        self.fk_service = rospy.Service('collision_ik/forward_kinematics', CollisionIKSolution, self._handle_fk_call)
+        
         # Rusty Robot Agent
         self.rusty_agent = Agent(env_settings_file_path, True, True)
         
         # Publishers
         time_pub = rospy.Publisher('/collision_ik/current_time', Float64, queue_size=10)
+        self.jas_pub = rospy.Publisher('/collision_ik/joint_angle_solutions', JointAngles, queue_size=10)
 
         marker_feedback_cb = partial(marker_feedback, agent=self.rusty_agent)
         marker_update_cb = partial(marker_update, agent=self.rusty_agent)
             
         # Subscribers use to update the collision object positions etc in the Rust-based CollisionIK agent.
-        rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb)
-        rospy.Subscriber('/simple_marker/update', InteractiveMarkerUpdate, marker_update_cb)
+        self.marker_feedback_sub = rospy.Subscriber('/simple_marker/feedback', InteractiveMarkerFeedback, marker_feedback_cb)
+        self.marker_update_sub = rospy.Subscriber('/simple_marker/update', InteractiveMarkerUpdate, marker_update_cb)
     
     def _handle_ik_call(self, req):
         pose_goals = req.ee_pose_goals.ee_poses
@@ -105,7 +108,37 @@ class CollisionIKServiceHandler():
                 ja_str += "]"
             else: 
                 ja_str += ", "
-            
+        self.jas_pub.publish(ja)
+        return ja
+
+    def _handle_fk_call(self, req):
+        pose_goals = req.ee_pose_goals.ee_poses
+        header = req.ee_pose_goals
+        pos_arr = []
+        quat_arr = []
+        for i in range(len(pose_goals)):
+            p = pose_goals[i]
+            pos_arr.append(p.position.x)
+            pos_arr.append(p.position.y)
+            pos_arr.append(p.position.z)
+
+            quat_arr.append(p.orientation.x)
+            quat_arr.append(p.orientation.y)
+            quat_arr.append(p.orientation.z)
+            quat_arr.append(p.orientation.w)
+
+        xopt = self.rusty_agent.collision_ik(pos_arr, quat_arr)
+        ja = JointAngles()
+        ja.header = header
+        ja_str = "["
+        for i in range(xopt.length):
+            ja.angles.data.append(xopt.data[i])
+            ja_str += str(xopt.data[i])
+            if i == xopt.length - 1:
+                ja_str += "]"
+            else: 
+                ja_str += ", "
+        self.jas_pub.publish(ja)
         return ja
         
 

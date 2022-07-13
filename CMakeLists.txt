@@ -65,6 +65,7 @@ add_service_files(
    CollisionIKSolution.srv
    IKSolution.srv
    SelfCollisionQuery.srv
+   CollisionFKSolution.srv
 )
 
 ## Generate actions in the 'action' folder

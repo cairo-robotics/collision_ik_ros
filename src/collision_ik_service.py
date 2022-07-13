@@ -13,8 +13,9 @@ import yaml
 from functools import partial
 
 from collision_ik.msg import EEPoseGoals, JointAngles
-from collision_ik.srv import CollisionIKSolution
+from collision_ik.srv import CollisionIKSolution, CollisionFKSolution
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Pose
 from timeit import default_timer as timer
 from visualization_msgs.msg import InteractiveMarkerFeedback, InteractiveMarkerUpdate
 
@@ -65,7 +66,7 @@ class CollisionIKServiceHandler():
         objective_mode = robot_info['objective_mode']
         print("\CollisionIK initialized!\nRobot: {}\nObjective mode: {}\n".format(robot_name, objective_mode))
         self.ik_service = rospy.Service('collision_ik/inverse_kinematics', CollisionIKSolution, self._handle_ik_call)
-        self.fk_service = rospy.Service('collision_ik/forward_kinematics', CollisionIKSolution, self._handle_fk_call)
+        self.fk_service = rospy.Service('collision_ik/forward_kinematics', CollisionFKSolution, self._handle_fk_call)
         
         # Rusty Robot Agent
         self.rusty_agent = Agent(env_settings_file_path, True, True)
@@ -83,7 +84,7 @@ class CollisionIKServiceHandler():
     
     def _handle_ik_call(self, req):
         pose_goals = req.ee_pose_goals.ee_poses
-        header = req.ee_pose_goals
+        header = req.ee_pose_goals.header
         pos_arr = []
         quat_arr = []
         for i in range(len(pose_goals)):
@@ -112,34 +113,21 @@ class CollisionIKServiceHandler():
         return ja
 
     def _handle_fk_call(self, req):
-        pose_goals = req.ee_pose_goals.ee_poses
-        header = req.ee_pose_goals
-        pos_arr = []
-        quat_arr = []
-        for i in range(len(pose_goals)):
-            p = pose_goals[i]
-            pos_arr.append(p.position.x)
-            pos_arr.append(p.position.y)
-            pos_arr.append(p.position.z)
+        fk_results = self.rusty_agent.forward_kinematics([value for value in req.angles.data])
+        pose = Pose()
+       
+        init_pos = fk_results[0]
+        init_rot = fk_results[1]
+        pose.position.x = init_pos[0]
+        pose.position.y = init_pos[1]
+        pose.position.z = init_pos[2]
+        
+        pose.orientation.x = init_rot[0]
+        pose.orientation.y = init_rot[1]
+        pose.orientation.z = init_rot[2]
+        pose.orientation.w = init_rot[3]
 
-            quat_arr.append(p.orientation.x)
-            quat_arr.append(p.orientation.y)
-            quat_arr.append(p.orientation.z)
-            quat_arr.append(p.orientation.w)
-
-        xopt = self.rusty_agent.collision_ik(pos_arr, quat_arr)
-        ja = JointAngles()
-        ja.header = header
-        ja_str = "["
-        for i in range(xopt.length):
-            ja.angles.data.append(xopt.data[i])
-            ja_str += str(xopt.data[i])
-            if i == xopt.length - 1:
-                ja_str += "]"
-            else: 
-                ja_str += ", "
-        self.jas_pub.publish(ja)
-        return ja
+        return pose
         
 
 def main(args=None):

@@ -317,9 +317,8 @@ def main():
     urdf_file = open(CONFIG_PATH + 'urdfs/' + urdf_file_name, 'r')
     urdf_string = urdf_file.read()
     rospy.set_param('/robot_description', urdf_string)
-    js_pub = rospy.Publisher('joint_states', JointState,queue_size=5)
+    js_pub = rospy.Publisher('joint_states', JointState, queue_size=5)
     rospy.Subscriber('/collision_ik/joint_angle_solutions', JointAngles, ja_solution_cb)
-    tf_pub = tf.TransformBroadcaster()
 
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
@@ -348,29 +347,19 @@ def main():
 
     delta_time = 0.01
     prev_sol = starting_config
-    initialized = False
 
     rate = rospy.Rate(3000)
     while not rospy.is_shutdown():
-        tf_pub.sendTransform((0, 0, 0), tf.transformations.quaternion_from_euler(0, 0, 0),
-                            rospy.Time.now(), 'common_world', fixed_frame)
+      
+        updated = False
+        for (name, waypoints) in dyn_obs_handles:
+            if time_cur < len(waypoints) * delta_time:
+                (time, pose) = utils.linear_interpolate_waypoints(waypoints, int(time_cur / delta_time))
+                server.setPose(name, pose)
+                updated = True
 
-        try: 
-            param = rospy.get_param("simulation_time")
-            initialized = param == "go"
-        except KeyError:
-            initialized = False
-
-        if initialized:
-            updated = False
-            for (name, waypoints) in dyn_obs_handles:
-                if time_cur < len(waypoints) * delta_time:
-                    (time, pose) = utils.linear_interpolate_waypoints(waypoints, int(time_cur / delta_time))
-                    server.setPose(name, pose)
-                    updated = True
-
-            if updated:
-                server.applyChanges()
+        if updated:
+            server.applyChanges()
 
         if len(ja_solution) == 0:
             xopt = starting_config

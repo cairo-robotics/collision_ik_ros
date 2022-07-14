@@ -189,7 +189,7 @@ Visualization Manager:
         All Enabled: false
         base:
           Value: true
-        common_world:
+        world:
           Value: true
         controller_box:
           Value: true
@@ -244,8 +244,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         base:
-          common_world:
-            {}
           controller_box:
             {}
           pedestal:
@@ -306,7 +304,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: common_world
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:

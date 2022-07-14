@@ -73,6 +73,7 @@ class CollisionIKServiceHandler():
         
         # Publishers
         time_pub = rospy.Publisher('/collision_ik/current_time', Float64, queue_size=10)
+        self.ee_pose_pub = rospy.Publisher('/collision_ik/ee_pose_goals', EEPoseGoals, queue_size=10)
         self.jas_pub = rospy.Publisher('/collision_ik/joint_angle_solutions', JointAngles, queue_size=10)
 
         marker_feedback_cb = partial(marker_feedback, agent=self.rusty_agent)
@@ -85,6 +86,7 @@ class CollisionIKServiceHandler():
     def _handle_ik_call(self, req):
         pose_goals = req.ee_pose_goals.ee_poses
         header = req.ee_pose_goals.header
+        self.ee_pose_pub.publish(req.ee_pose_goals)
         pos_arr = []
         quat_arr = []
         for i in range(len(pose_goals)):

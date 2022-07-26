@@ -69,7 +69,7 @@ class CollisionIKServiceHandler():
         self.fk_service = rospy.Service('collision_ik/forward_kinematics', CollisionFKSolution, self._handle_fk_call)
         
         # Rusty Robot Agent
-        self.rusty_agent = Agent(env_settings_file_path, True, True)
+        self.rusty_agent = Agent(env_settings_file_path, False, False)
         
         # Publishers
         time_pub = rospy.Publisher('/collision_ik/current_time', Float64, queue_size=10)

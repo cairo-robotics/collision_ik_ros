@@ -76,7 +76,7 @@ def main(args=None):
     print("\CollisionIK initialized!\nRobot: {}\nObjective mode: {}\n".format(robot_name, objective_mode))
     
     # Rusty Robot Agent
-    rusty_agent = Agent(env_settings_file_path, True, True)
+    rusty_agent = Agent(env_settings_file_path, False, False)
     
     # Publishers
     angles_pub = rospy.Publisher('/collision_ik/joint_angle_solutions', JointAngles, queue_size=10)

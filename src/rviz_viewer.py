@@ -57,8 +57,8 @@ def marker_feedback_cb(msg, args):
 def goal_marker_cb(msg, args):
     server = args[0]
     p = msg.ee_poses[0]
-    pos_goal = numpy.array(args[1]) + numpy.array([p.position.x, p.position.y, p.position.z])
-    rot_goal = T.quaternion_multiply([p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z], args[2])
+    pos_goal = numpy.array([p.position.x, p.position.y, p.position.z])
+    rot_goal = [p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z]
     pose = Pose()
     pose.position.x = pos_goal[0]
     pose.position.y = pos_goal[1]

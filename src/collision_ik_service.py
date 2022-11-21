@@ -42,7 +42,7 @@ class CollisionIKServiceHandler():
         self.fk_service = rospy.Service('collision_ik/forward_kinematics', CollisionFKSolution, self._handle_fk_call)
         
         # Rusty Robot Agent
-        self.rusty_agent = Agent(env_settings_file_path, False, False)
+        self.rusty_agent = Agent(env_settings_file_path, True, True)
         
         # Publishers
         self.ee_pose_pub = rospy.Publisher('/collision_ik/ee_pose_goals', EEPoseGoals, queue_size=10)
@@ -54,8 +54,6 @@ class CollisionIKServiceHandler():
         self.current_joint_angles = ja
 
     def _handle_ik_call(self, req):
-        self.ee_pose_pub.publish(req.ee_pose_goals)
-        header = req.ee_pose_goals.header
         self.ee_pose_pub.publish(req.ee_pose_goals)
         return self.current_joint_angles
 

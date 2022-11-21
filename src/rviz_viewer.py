@@ -57,17 +57,8 @@ def marker_feedback_cb(msg, args):
 def goal_marker_cb(msg, args):
     server = args[0]
     p = msg.ee_poses[0]
-    pos_goal = numpy.array([p.position.x, p.position.y, p.position.z])
-    rot_goal = [p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z]
-    pose = Pose()
-    pose.position.x = pos_goal[0]
-    pose.position.y = pos_goal[1]
-    pose.position.z = pos_goal[2]
-    pose.orientation.w = rot_goal[0]
-    pose.orientation.x = rot_goal[1]
-    pose.orientation.y = rot_goal[2]
-    pose.orientation.z = rot_goal[3]
-    server.setPose("pose_goal", pose)    
+    print(p)
+    server.setPose("pose_goal", p)    
     server.applyChanges()
 
 def print_cb(msg):
@@ -107,7 +98,7 @@ def make_marker(name, fixed_frame, shape, scale, ts, quat, is_dynamic,
         z_axis.x = 0.0
         z_axis.y = 0.0
         z_axis.z = scale[2]
-        points = [[origin, x_axis], [origin, z_axis], [origin, y_axis]]
+        points = [[origin, x_axis],[origin, y_axis], [origin, z_axis]]
         colors = [[1.0, 0.0, 0.0, 0.6], [0.0, 1.0, 0.0, 0.6], [0.0, 0.0, 1.0, 0.6]]
         for i in range(len(colors)):
             marker = Marker()
@@ -333,7 +324,7 @@ def main():
     # init_pos, init_rot = utils.get_init_pose(info_file_path)
     starting_fk_results = rusty_agent.forward_kinematics(starting_config)
     init_pos = starting_fk_results[0]
-    init_rot = starting_fk_results[1]
+    init_rot = [starting_fk_results[1][3], starting_fk_results[1][0], starting_fk_results[1][1], starting_fk_results[1][2]]
     pose_goal_marker = make_marker('pose_goal', fixed_frame, 'widget', [0.1,0.1,0.1], init_pos, init_rot, False)
     server.insert(pose_goal_marker)
 

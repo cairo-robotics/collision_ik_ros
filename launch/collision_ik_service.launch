@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
 <launch>=
-    <node pkg="collision_ik" type="collision_ik_service.py" name="collision_ik" output="screen"/>
+    <node pkg="collision_ik" type="collision_ik_service.py" name="collision_ik_serivce" output="screen"/>
+    <node pkg="collision_ik" type="collision_ik_solver.py" name="collision_ik_solver" output="screen"/>
 </launch>
